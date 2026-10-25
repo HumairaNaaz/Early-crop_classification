@@ -1,0 +1,19 @@
+% notation.tex -- single source of truth for symbols (Paper Lead owns this file).
+% Old symbols in the plan reused \beta and \gamma for 4 different things; renamed below.
+\newcommand{\Xspec}{\mathbf{X}}                 % spectral time series  (T x 12)
+\newcommand{\Xstat}{\mathbf{z}}                 % static features
+\newcommand{\Htemp}{\mathbf{h}_{\mathrm{temp}}} % temporal embedding (64-d)
+\newcommand{\Hstat}{\mathbf{h}_{\mathrm{stat}}} % static embedding (64-d)
+\newcommand{\Hprior}{\mathbf{e}_{\mathrm{prior}}} % previous-year crop embedding
+\newcommand{\Hfused}{\mathbf{h}_{\mathrm{fused}}}
+\newcommand{\FiLMs}{\mathbf{s}}                 % FiLM scale   (was gamma_FiLM)
+\newcommand{\FiLMo}{\mathbf{o}}                 % FiLM offset  (was beta_FiLM)
+\newcommand{\gate}{g}                           % rotation gate value in [0,1] (was gamma_t)
+\newcommand{\gatelam}{\lambda}                  % divergence sensitivity       (was beta in gate)
+\newcommand{\Drot}{D_{\mathrm{rot}}}            % divergence score
+\newcommand{\muexp}{\boldsymbol{\mu}_{\mathrm{exp}}} % expected profile for last year's crop
+\newcommand{\cbw}{w_c}                          % class-balanced weight (was alpha_i)
+\newcommand{\cbbeta}{\beta_{\mathrm{cb}}}       % CB-loss hyperparameter (Cui et al.)
+\newcommand{\focg}{\gamma_{\mathrm{f}}}         % focal exponent (Lin et al.)
+\newcommand{\todo}[1]{{\color{red}[TODO: #1]}}
+\newcommand{\pending}{{\color{red}[RESULTS PENDING]}}

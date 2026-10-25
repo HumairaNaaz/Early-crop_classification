@@ -1,0 +1,29 @@
+\section{Introduction}
+\label{sec:intro}
+
+% P1 -- why early crop type classification matters (supported by baseline abstract)
+Knowing which crops are planted in which fields, \emph{before} the season ends, helps policymakers, irrigation managers and producer organizations allocate water, forecast production and stabilize food prices~\cite{genemola2026}. Most existing approaches classify crops from the spectral time series of satellite images and focus on end-of-season classification~\cite{genemola2026}, by which time much of the decision-making value is lost.
+
+% P2 -- why early season is hard
+Early-season classification is difficult for several reasons. Only part of the season has been observed, so the crops have not yet developed the distinct temporal signatures that separate them. Cloud cover creates gaps in optical time series, and the spectral information available in a short window is limited~\cite{genemola2026}. \todo{Add 1--2 supporting citations from Theme 5 (e.g., early-season papers) after reading them.}
+
+% P3 -- what helps: time series + static/ancillary data
+Two sources of information can help. First, satellite time series such as Sentinel-2 describe how each field changes over time. Second, ancillary information such as the previous-year crop type, irrigation type and cloud cover supplies context that does not depend on the current season. In the baseline study, multi-year remote-sensing data improved early-season accuracy, and ancillary data (especially previous-year crop type) added a further gain~\cite{genemola2026}. \todo{Insert exact numbers only after the full PDF is read; the abstract page reports roughly 70\% accuracy at season onset with multi-year data, 80\% early with ancillary data and 88\% at season end.}
+
+% P4 -- limitations supported by evidence
+The baseline study also reports that under-represented crop classes remain difficult to classify because of class imbalance, and it calls for better dataset-balancing techniques~\cite{genemola2026}. \todo{Add further limitations ONLY if confirmed in the full text, e.g., how static features are combined with the time series, and the effect on fields whose crop changed from the previous year. The team plan states a rotated-field accuracy drop (97\% to about 56\%) that is not yet verified in the paper -- do not write it until checked.}
+
+% P5 -- motivation for our approach (framed as hypotheses)
+These observations motivate three questions that we investigate. (i)~Does processing static field attributes in a separate branch and fusing them with the temporal features by feature-wise modulation and cross-attention work better than appending them to the time series? (ii)~Can a gate that compares the current-season signal with the signal expected from the previous-year crop help when the current crop differs from last year's crop? (iii)~Does a class-balanced focal loss improve recognition of rare crops? Related work on multimodal fusion and on rotation-aware models suggests these are reasonable directions~\cite{barriere2024,perez2018film}, but their value for early-season classification on our benchmark is what we test here.
+
+% P6 -- objectives/contributions (planned, NOT results)
+The planned contributions of this work are:
+\begin{itemize}
+\item a dual-branch architecture that separates temporal satellite features from static field features and fuses them with feature-wise linear modulation and cross-attention;
+\item a rotation-aware adaptive gate that scales the influence of the previous-year crop according to a divergence score;
+\item the use of a class-balanced focal loss for rare crop classes; and
+\item a controlled ablation study against a reproduced baseline Transformer at four dates of the test season.
+\end{itemize}
+\pending{Rewrite this list as findings once experiments finish. State a contribution as ``improves'' only if the results support it.}
+
+The remainder of the paper is organized as follows. Section~\ref{sec:related} reviews related work, Section~\ref{sec:problem} formulates the problem, Section~\ref{sec:method} describes the method, Section~\ref{sec:setup} the experimental setup, Section~\ref{sec:results} the results, Section~\ref{sec:ablation} the ablation study, and Section~\ref{sec:conclusion} concludes.

@@ -1,0 +1,62 @@
+% =====================================================================
+% main.tex -- IEEE conference manuscript (Overleaf: set this as Main document)
+% Compiler: pdfLaTeX. Bibliography: BibTeX (references.bib). 
+% =====================================================================
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{microtype}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1em\lower.7ex\hbox{E}\kern-.15em X}}
+
+% ---- Project macros (see notation.tex; change a symbol in ONE place) ----
+\input{notation}
+
+\begin{document}
+
+\title{Enhanced Early Crop Type Classification via Dual-Branch Cross-Attention and Rotation-Aware Adaptive Gating}
+
+% NOTE: Affiliations/emails are NOT filled in on purpose. Each author adds their own.
+% Five authors are placed in ONE block so the IEEE layout never overflows; once affiliations
+% are known, split into several \IEEEauthorblockN/\IEEEauthorblockA pairs joined by \and.
+\author{
+\IEEEauthorblockN{Anshika Rana, Deepasha, Divyanshi, Humaira, Ishu}
+\IEEEauthorblockA{\textit{[AFFILIATION -- TODO]}\\
+{[EMAILS -- TODO]}}
+}
+% TODO (team): add SURNAMES for everyone except Anshika (only her full name appears in the plan); confirm final author list, order, full names, and whether Ishu is a co-author.
+
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\begin{IEEEkeywords}
+crop type classification, early-season mapping, Sentinel-2, satellite image time series, Transformer, multimodal fusion, crop rotation, class imbalance
+\end{IEEEkeywords}
+
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/problem_formulation}
+\input{sections/methodology}
+\input{sections/experiments}
+\input{sections/results}
+\input{sections/ablation}
+\input{sections/conclusion}
+
+\section*{Acknowledgment}
+% TODO: add if applicable (data providers, compute, supervisor).
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

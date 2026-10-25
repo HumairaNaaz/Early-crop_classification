@@ -1,0 +1,13 @@
+\section{Problem Formulation}
+\label{sec:problem}
+% Owners: Anshika + Deepasha (joint). Shapes follow the team's interface contract.
+Let $\mathcal{F}$ be a set of agricultural fields. For field $i\in\mathcal{F}$ observed up to day-of-year $\tau$, the available inputs are:
+(i)~a satellite time series $\Xspec_i^{(\tau)}\in\mathbb{R}^{T_i\times 12}$ with $T_i$ observations up to day $\tau$, each with 10 Sentinel-2 bands, a cloud probability and the day-of-year;
+(ii)~static attributes $\Xstat_i$ (continuous features such as elevation and slope, and categorical features such as irrigation type and municipality); and
+(iii)~the previous-year crop label $y_i^{\mathrm{prev}}\in\{1,\dots,C\}$.
+The goal is to predict the current-season crop type $y_i\in\{1,\dots,C\}$ with $C=18$ classes using only information available by day $\tau$:
+\begin{equation}
+\hat{y}_i = \arg\max_{c}\; p_\theta\!\left(c \mid \Xspec_i^{(\tau)},\, \Xstat_i,\, y_i^{\mathrm{prev}}\right).
+\label{eq:problem}
+\end{equation}
+A field is called \emph{rotated} if $y_i \neq y_i^{\mathrm{prev}}$. \todo{Confirm $C=18$, the 12-channel input and the exact rotated-field definition against the baseline paper and the dataset.} A reliable early-season model must perform well for small $\tau$, for rotated fields, and for rare classes.

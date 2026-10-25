@@ -1,0 +1,24 @@
+# Shared config: paths, seeds, interface contract. Change here, not inside modules.
+seed: 42
+paths:
+  data_root: data/raw
+  cache: data/processed
+  outputs: outputs
+protocol:            # TODO(Divyanshi/Ishu): confirm against baseline paper
+  train_year: 2022
+  test_year: 2023
+  eval_dates: ["03-01", "06-01", "09-01", "12-01"]   # 1 Mar, 1 Jun, 1 Sep, 1 Dec
+interface:           # agreed tensor shapes (B = batch, T = time steps)
+  n_channels: 12     # 10 S2 bands + cloud prob + day-of-year
+  d_model: 64
+  n_classes: 18
+  n_layers: 5
+model:
+  fusion: film       # film | cross_attention | film+cross_attention
+  use_gate: true
+  loss: cb_focal     # ce | cb_focal
+loss:
+  cb_beta: 0.999     # TODO(Deepasha): placeholder, tune
+  focal_gamma: 2.0   # TODO(Deepasha): placeholder, tune
+gate:
+  lambda: 1.0        # divergence sensitivity (placeholder)

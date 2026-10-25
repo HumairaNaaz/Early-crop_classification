@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+data/raw/
+data/processed/
+*.h5
+*.parquet
+*.pt
+*.pth
+wandb/
+runs/
+outputs/
+.ipynb_checkpoints/
+# LaTeX build files
+paper/*.aux
+paper/*.log
+paper/*.bbl
+paper/*.blg
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.out
+paper/*.synctex.gz

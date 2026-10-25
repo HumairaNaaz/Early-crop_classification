@@ -1,0 +1,51 @@
+\section{Proposed Methodology}
+\label{sec:method}
+% Owners: Anshika (architecture), Deepasha (gate, loss). Everything here describes the
+% DESIGN being investigated. Update equations to match the final code, not the other way round.
+
+Figure~\ref{fig:arch} gives an overview. The model has two branches whose outputs are fused under the control of a rotation gate.
+
+\begin{figure}[t]
+\centering
+% Replace with exported vector PDF from draw.io: \includegraphics[width=\columnwidth]{figures/architecture.pdf}
+\fbox{\parbox{0.9\columnwidth}{\centering\vspace{1.2cm}[FIGURE PLACEHOLDER: architecture --- temporal branch, static branch, rotation gate, FiLM/cross-attention fusion]\vspace{1.2cm}}}
+\caption{Overview of the proposed dual-branch model with rotation-aware gating. \todo{Insert final figure.}}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Temporal branch}
+The input $\Xspec$ is linearly projected to 64 dimensions, a temporal positional encoding $\mathbf{P}$ is added, and the result passes through $L$ self-attention blocks ($L=5$ in the current design). Max-pooling over time gives $\Htemp\in\mathbb{R}^{64}$:
+\begin{equation}
+\mathbf{H}_0=\mathrm{ReLU}(\mathbf{W}_{\mathrm{in}}\Xspec+\mathbf{b}_{\mathrm{in}})+\mathbf{P},\quad
+\Htemp=\mathrm{MaxPool}_t(\mathbf{H}_L).
+\end{equation}
+\todo{Anshika: confirm dimensions, number of heads, and whether this matches the reproduced baseline encoder.}
+
+\subsection{Static branch}
+Continuous features and learned embeddings of categorical features are concatenated and passed through an MLP:
+\begin{equation}
+\Hstat=\mathrm{MLP}\big([\mathbf{z}_{\mathrm{cont}}\,\|\,E_{\mathrm{irr}}(z_{\mathrm{irr}})\,\|\,E_{\mathrm{mun}}(z_{\mathrm{mun}})]\big)\in\mathbb{R}^{64}.
+\end{equation}
+
+\subsection{Rotation-aware adaptive gate}
+Let $\muexp(t)$ be the expected spectral profile of the previous-year crop, computed from training-year fields only. The divergence and gate are
+\begin{align}
+\Drot(t) &= 1-\frac{\Xspec(t)^{\top}\muexp(t)}{\lVert\Xspec(t)\rVert\,\lVert\muexp(t)\rVert},\\
+\gate &= \sigma\!\left(\mathbf{w}_g^{\top}[\Htemp\,\|\,\Hprior]-\gatelam\,\bar{D}_{\mathrm{rot}}\right)\in[0,1],
+\end{align}
+where $\bar{D}_{\mathrm{rot}}$ summarizes $\Drot(t)$ over the observed time steps. \todo{Deepasha: the plan writes the gate as a function of $t$ but $\Htemp$ is pooled over time. Confirm how $\Drot(t)$ is aggregated (mean? last observed step?) and write it exactly as in the code.}
+
+\subsection{Fusion}
+The static embedding modulates the temporal embedding (FiLM), and the gated prior-crop embedding is added:
+\begin{equation}
+\Hfused=\FiLMs(\Hstat)\odot\Htemp+\FiLMo(\Hstat)+\gate\,\Hprior .
+\label{eq:fusion}
+\end{equation}
+An optional cross-attention block between the branches is also investigated. \todo{Anshika: specify the cross-attention variant (queries/keys/values) and its position relative to FiLM.}
+
+\subsection{Class-balanced focal loss}
+With $N_c$ training samples in class $c$, the class weight is $\cbw=(1-\cbbeta)/(1-\cbbeta^{N_c})$ and the loss for a sample with true class $c$ and predicted probability $p_c$ is
+\begin{equation}
+\mathcal{L}=-\cbw\,(1-p_c)^{\focg}\log p_c .
+\end{equation}
+\todo{Deepasha: confirm normalization of $\cbw$ and the values of $\cbbeta$ and $\focg$ used.}

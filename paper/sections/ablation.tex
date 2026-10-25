@@ -1,0 +1,19 @@
+\section{Ablation Study}
+\label{sec:ablation}
+% Owner: Divyanshi. Each run adds exactly one component.
+\begin{table}[t]
+\caption{Ablation ladder. A = reproduced baseline; B adds dual-branch fusion; C adds the rotation gate; D adds the class-balanced focal loss. \pending}
+\label{tab:ablation}
+\centering
+\begin{tabular}{llccc}
+\toprule
+Run & Configuration & Acc. & Macro F1 & Rare F1 \\
+\midrule
+A & Baseline Transformer & -- & -- & -- \\
+B & A + dual-branch fusion & -- & -- & -- \\
+C & B + rotation gate & -- & -- & -- \\
+D & C + CB focal loss & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+\todo{Explain what each step isolates, and report any step that does not help.}

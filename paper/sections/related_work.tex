@@ -1,0 +1,30 @@
+\section{Related Work}
+\label{sec:related}
+% HOW TO USE: Each paragraph = one THEME (owner in brackets). Do not list papers one by one;
+% compare them and end each paragraph with the gap that leads to the next theme.
+% Statements below only restate what the team plan says each paper is about. 
+% Humaira: after reading each paper, confirm the claim and add details/results.
+
+\subsection{Crop classification from satellite time series}
+% Owner: Humaira.
+Early work on satellite time-series classification relied on recurrent and convolutional networks; the temporal convolutional network is described in the team plan as the strongest pre-Transformer baseline~\cite{pelletier2019}. Self-attention was later applied to raw optical time series~\cite{russwurm2020}, building on the original Transformer~\cite{vaswani2017}, and attention-based encoders for parcels were also proposed~\cite{garnot2020}. The baseline for this work adapts the Transformer to year-round crop classification with ancillary data~\cite{genemola2026}. \todo{Verify each statement against the papers; add datasets and key results.}
+
+\subsection{Early-season classification and benchmarks}
+% Owner: Ishu.
+\todo{Theme 5 papers (e.g., Weilandt 2023; Ra\v{c}i\'{c} 2024; BreizhCrops; Sen4AgriNet). Not yet in references.bib -- add after verifying.}
+
+\subsection{Multimodal fusion}
+% Owner: Anshika.
+Feature-wise linear modulation (FiLM) conditions one network's features on another input through a learned scale and shift~\cite{perez2018film}. \todo{Add cross-attention (Tsai 2019; Lu 2019) and crop-specific fusion (Sainte Fare Garnot 2022) after verification. Explain how fusion differs from concatenation.}
+
+\subsection{Crop rotation and gating}
+% Owner: Deepasha.
+Prior work has combined satellite data with rotation history for crop classification~\cite{barriere2024}. \todo{State what that work does and how our gate differs (our gate scales the prior-crop signal using a divergence score). Do not claim novelty until the team has checked this closest-related paper carefully.}
+
+\subsection{Class imbalance and rare classes}
+% Owner: Divyanshi.
+The focal loss down-weights well-classified examples~\cite{lin2017focal}, and the class-balanced loss re-weights classes by the effective number of samples~\cite{cui2019cb}. \todo{Add LDAM-DRW, resampling studies and crop-specific imbalance work; note the plan's warning against stacking inverse-frequency weights on top of balanced sampling (verify source).}
+
+\subsection{Summary and gap}
+% Owner: Humaira. Write last. Only list gaps the evidence supports.
+\todo{Short synthesis: what is solved, what remains (supported gaps only), and how this work addresses them.}

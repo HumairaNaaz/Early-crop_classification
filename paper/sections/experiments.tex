@@ -1,0 +1,15 @@
+\section{Experimental Setup}
+\label{sec:setup}
+% Owner: Ishu (data) + Divyanshi (protocol). Fill only from verified runs.
+
+\subsection{Dataset}
+We use the CatCrops benchmark released with the baseline study (Lleida, Catalonia, Spain)~\cite{genemola2026}. \todo{Verify the number of fields (abstract page says about 130{,}000; the team plan says 137{,}408 from the authors' slides), the 18 classes, class frequencies, and the label sources. Cite the dataset record (DOI 10.34810/data2322) after checking its license and citation text.}
+
+\subsection{Protocol}
+Models are trained on 2022 data with random day-of-year cropping and tested on 2023 data at four dates: 1~March, 1~June, 1~September and 1~December. \todo{Confirm that this matches the baseline protocol so the comparison is fair.}
+
+\subsection{Metrics}
+We report overall accuracy, macro and weighted F1, per-class F1, and confusion matrices at each date, together with accuracy on rotated fields and F1 on rare classes (frequency below 0.2\%). \todo{Divyanshi: confirm metric definitions; report mean and spread over 3 seeds and give per-class support counts.}
+
+\subsection{Implementation details}
+\todo{Optimizer, learning rate, batch size, epochs, early stopping, seeds, hardware, software versions.}

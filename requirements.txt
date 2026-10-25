@@ -1,0 +1,14 @@
+# TODO (Data Lead / Model Lead): pin EXACT versions after the first working run (pip freeze).
+# Our code: Python 3.10+. The baseline repo needs its own Python 3.8 env (see docs/SETUP.md).
+torch
+numpy
+pandas
+h5py
+pyarrow
+scikit-learn
+matplotlib
+seaborn
+tqdm
+PyYAML
+pytest
+# optional: wandb, geopandas, shapely, rasterio, earthengine-api, geemap, breizhcrops
