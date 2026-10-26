@@ -1,0 +1,20 @@
+{
+  "checks": {
+    "train_year_is_2022": true,
+    "validation_year_is_2022": true,
+    "test_year_is_2023": true,
+    "train_region_is_lleida": true,
+    "validation_region_is_lleida": true,
+    "test_region_is_lleida": true,
+    "excluded_classes_absent": true,
+    "all_splits_have_18_classes": true,
+    "previous_crop_column_present": true,
+    "no_duplicate_field_ids_within_split": true
+  },
+  "split_sizes": {
+    "train": 114732,
+    "validation": 12748,
+    "test": 137055
+  },
+  "all_passed": true
+}

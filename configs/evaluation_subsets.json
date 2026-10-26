@@ -1,0 +1,15 @@
+{
+  "rare_class_threshold": 0.002,
+  "rare_class_ids": [
+    4,
+    5,
+    6,
+    16,
+    20
+  ],
+  "rare_validation_fields": 68,
+  "rare_test_fields": 2203,
+  "rotated_validation_fields": 2724,
+  "rotated_test_fields": 52299,
+  "rotation_definition": "pcrop_code differs from CODE_CULTU when both are present; code-level proxy only"
+}

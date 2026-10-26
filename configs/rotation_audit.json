@@ -1,0 +1,26 @@
+{
+  "train": {
+    "fields": 114732,
+    "previous_crop_available": 113125,
+    "previous_crop_missing": 1607,
+    "both_codes_available": 113125,
+    "different_crop_codes": 25649,
+    "different_code_percent_of_comparable": 22.67
+  },
+  "validation": {
+    "fields": 12748,
+    "previous_crop_available": 12574,
+    "previous_crop_missing": 174,
+    "both_codes_available": 12574,
+    "different_crop_codes": 2724,
+    "different_code_percent_of_comparable": 21.66
+  },
+  "test": {
+    "fields": 137055,
+    "previous_crop_available": 135189,
+    "previous_crop_missing": 1866,
+    "both_codes_available": 135189,
+    "different_crop_codes": 52299,
+    "different_code_percent_of_comparable": 38.69
+  }
+}

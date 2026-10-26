@@ -1,0 +1,23 @@
+{
+  "train": {
+    "fields": 114732,
+    "comparable_fields": 113121,
+    "unmapped_or_missing_previous_class": 1611,
+    "crop_class_changes": 19661,
+    "crop_class_change_percent_comparable": 17.38
+  },
+  "validation": {
+    "fields": 12748,
+    "comparable_fields": 12572,
+    "unmapped_or_missing_previous_class": 176,
+    "crop_class_changes": 2084,
+    "crop_class_change_percent_comparable": 16.58
+  },
+  "test": {
+    "fields": 137055,
+    "comparable_fields": 135090,
+    "unmapped_or_missing_previous_class": 1965,
+    "crop_class_changes": 34182,
+    "crop_class_change_percent_comparable": 25.3
+  }
+}

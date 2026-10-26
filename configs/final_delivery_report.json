@@ -1,0 +1,50 @@
+{
+  "dataset": "CatCrops",
+  "region": "Lleida",
+  "class_count": 18,
+  "split_counts": {
+    "train_2022.csv": {
+      "fields": 114732,
+      "classes": 18
+    },
+    "val_2022.csv": {
+      "fields": 12748,
+      "classes": 18
+    },
+    "test_2023.csv": {
+      "fields": 137055,
+      "classes": 18
+    }
+  },
+  "rotation_class_change": {
+    "train": {
+      "fields": 114732,
+      "comparable_fields": 113121,
+      "unmapped_or_missing_previous_class": 1611,
+      "crop_class_changes": 19661,
+      "crop_class_change_percent_comparable": 17.38
+    },
+    "validation": {
+      "fields": 12748,
+      "comparable_fields": 12572,
+      "unmapped_or_missing_previous_class": 176,
+      "crop_class_changes": 2084,
+      "crop_class_change_percent_comparable": 16.58
+    },
+    "test": {
+      "fields": 137055,
+      "comparable_fields": 135090,
+      "unmapped_or_missing_previous_class": 1965,
+      "crop_class_changes": 34182,
+      "crop_class_change_percent_comparable": 25.3
+    }
+  },
+  "checks": {
+    "train_2022.csv": true,
+    "val_2022.csv": true,
+    "test_2023.csv": true,
+    "all_deliverables_present": true
+  },
+  "missing_deliverables": [],
+  "ready_for_handoff": true
+}
