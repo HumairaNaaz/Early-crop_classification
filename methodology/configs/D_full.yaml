@@ -1,0 +1,7 @@
+# Run D: C + Class-Balanced Focal Loss (full proposed model).
+base: base.yaml
+name: D_full
+model:
+  gate: rotation
+loss:
+  type: cb_focal

@@ -1,0 +1,11 @@
+# Run D (v2): gentler class-balanced focal loss. The v1 setting (beta 0.9999, gamma 2) weighted the
+# rarest class about 240x the most common one and collapsed one seed (see logs/diagnose_D.json).
+base: base.yaml
+name: D_full
+model:
+  type: dual_branch
+  gate: rotation
+loss:
+  type: cb_focal
+  cb_beta: 0.999
+  focal_gamma: 1.0

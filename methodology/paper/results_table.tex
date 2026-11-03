@@ -1,0 +1,31 @@
+% Results table generated from results/v2/results_summary.csv (v2 protocol, 3 seeds, local RTX 3050, 3 Nov 2026).
+% Numbers are mean $\pm$ std over seeds 0, 1, 2 on the 2023 fields (never used for training or model selection).
+\begin{table}[t]
+\centering
+\small
+\caption{2023 results at four in-season dates (mean $\pm$ standard deviation over three seeds). Best per column in bold.}
+\label{tab:ablation}
+\begin{tabular}{lcccc}
+\hline
+Run & 1 Mar & 1 Jun & 1 Sep & 1 Dec \\
+\hline
+\multicolumn{5}{l}{\textit{Overall accuracy}} \\
+A: baseline (faithful) & 0.786 $\pm$ 0.016 & \textbf{0.831 $\pm$ 0.014} & \textbf{0.872 $\pm$ 0.011} & \textbf{0.882 $\pm$ 0.006} \\
+B: + dual branch, FiLM & 0.787 $\pm$ 0.003 & 0.823 $\pm$ 0.016 & 0.847 $\pm$ 0.016 & 0.848 $\pm$ 0.017 \\
+C: + rotation gate & 0.770 $\pm$ 0.027 & 0.815 $\pm$ 0.020 & 0.842 $\pm$ 0.019 & 0.845 $\pm$ 0.016 \\
+D: + CB focal loss & \textbf{0.791 $\pm$ 0.004} & 0.829 $\pm$ 0.008 & 0.849 $\pm$ 0.010 & 0.852 $\pm$ 0.012 \\
+\hline
+\multicolumn{5}{l}{\textit{Macro-F1}} \\
+A: baseline (faithful) & 0.462 $\pm$ 0.002 & 0.501 $\pm$ 0.004 & \textbf{0.555 $\pm$ 0.008} & \textbf{0.576 $\pm$ 0.015} \\
+B: + dual branch, FiLM & 0.465 $\pm$ 0.001 & 0.503 $\pm$ 0.009 & 0.525 $\pm$ 0.007 & 0.529 $\pm$ 0.007 \\
+C: + rotation gate & 0.453 $\pm$ 0.013 & 0.499 $\pm$ 0.011 & 0.523 $\pm$ 0.020 & 0.527 $\pm$ 0.021 \\
+D: + CB focal loss & \textbf{0.467 $\pm$ 0.003} & \textbf{0.514 $\pm$ 0.004} & 0.541 $\pm$ 0.014 & 0.545 $\pm$ 0.015 \\
+\hline
+\multicolumn{5}{l}{\textit{Accuracy on fields whose crop changed from 2022}} \\
+A: baseline (faithful) & 0.288 $\pm$ 0.051 & \textbf{0.442 $\pm$ 0.050} & \textbf{0.601 $\pm$ 0.043} & \textbf{0.648 $\pm$ 0.027} \\
+B: + dual branch, FiLM & 0.283 $\pm$ 0.009 & 0.409 $\pm$ 0.030 & 0.509 $\pm$ 0.027 & 0.518 $\pm$ 0.036 \\
+C: + rotation gate & 0.265 $\pm$ 0.053 & 0.407 $\pm$ 0.045 & 0.509 $\pm$ 0.053 & 0.529 $\pm$ 0.042 \\
+D: + CB focal loss & \textbf{0.292 $\pm$ 0.028} & 0.431 $\pm$ 0.026 & 0.542 $\pm$ 0.026 & 0.562 $\pm$ 0.023 \\
+\hline
+\end{tabular}
+\end{table}

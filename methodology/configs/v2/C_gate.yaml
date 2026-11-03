@@ -1,0 +1,5 @@
+base: base.yaml
+name: C_gate
+model:
+  type: dual_branch
+  gate: rotation

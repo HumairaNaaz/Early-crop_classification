@@ -1,0 +1,94 @@
+% Methodology section (draft generated from the implemented code; keep in sync with configs/base.yaml).
+% Symbols are chosen so that no letter has two meanings:
+%   FiLM scale/shift: \phi, \psi     gate: g, \lambda     CB loss: \beta_{cb}     focal exponent: \kappa
+\section{Methodology}
+
+\subsection{Problem formulation}
+For a field $i$ we observe a Sentinel-2 time series up to a cutoff day $\tau$,
+$X_i^{\le\tau} = \{(\mathbf{x}_{t}, d_{t})\}_{t=1}^{T_i}$, where $\mathbf{x}_t \in \mathbb{R}^{11}$ holds ten
+surface-reflectance bands (B2--B8, B8A, B11, B12) and the cloud probability, and $d_t$ is the acquisition day
+relative to 1~January of the target year (negative for the previous year). We also observe static field
+attributes $\mathbf{s}_i$ (elevation, slope, irrigation system, municipality) and the previous-year crop
+$y_i^{\text{prev}} \in \{1,\dots,C\} \cup \{\varnothing\}$. The task is to predict the current crop
+$y_i \in \{1,\dots,C\}$, $C = 18$, for any $\tau$; we report $\tau \in \{60, 152, 244, 335\}$
+(1~March, 1~June, 1~September, 1~December).
+
+\subsection{Temporal branch}
+Each observation is mapped to $\mathbf{z}_t = [\tilde{\mathbf{x}}_t ; d_t/365] \in \mathbb{R}^{12}$, where
+$\tilde{\mathbf{x}}_t$ is standardised with training-set statistics. A linear projection and a sinusoidal
+encoding of the acquisition day give
+\begin{equation}
+  \mathbf{h}^{(0)}_t = \mathrm{ReLU}\big(W_{\text{in}}\,\mathrm{LN}(\mathbf{z}_t)\big) + \mathrm{PE}(d_t),
+\end{equation}
+which a five-block Transformer encoder (model width 64, two heads) turns into tokens
+$\mathbf{H} = [\mathbf{h}_1, \dots, \mathbf{h}_T]$, with padded steps masked out of attention.
+
+\subsection{Static branch}
+Continuous attributes are standardised; categorical attributes are embedded. An MLP produces a static
+summary $\mathbf{h}_s \in \mathbb{R}^{64}$, and each attribute is also projected to its own token, giving
+$\mathbf{S} \in \mathbb{R}^{4 \times 64}$.
+
+\subsection{Fusion}
+Temporal tokens attend to the static tokens,
+\begin{equation}
+  \mathbf{h}'_t = \mathrm{LN}\big(\mathbf{h}_t + \mathrm{MHA}(\mathbf{h}_t, \mathbf{S}, \mathbf{S})\big),
+  \qquad
+  \mathbf{h}_{\text{temp}} = \max_{t \in \mathcal{V}} \mathbf{h}'_t ,
+\end{equation}
+where $\mathcal{V}$ is the set of valid (non-padded) steps. Feature-wise linear modulation (FiLM) then lets
+the static summary scale and shift the temporal representation:
+\begin{equation}
+  \mathbf{h}_{\text{FiLM}} = \big(\mathbf{1} + \phi(\mathbf{h}_s)\big) \odot \mathbf{h}_{\text{temp}} + \psi(\mathbf{h}_s),
+\end{equation}
+with $\phi$ and $\psi$ linear maps initialised to zero, so training starts from the unmodulated features.
+
+\subsection{Rotation-aware adaptive gate}
+Let $\boldsymbol{\mu}_c(b)$ be the mean standardised band vector of class $c$ in five-day bin $b$ of the
+year, computed on the training fields. For a field with known previous crop $p$, the divergence of the
+current season from that crop's expected development is
+\begin{equation}
+  D_{\text{rot}} = \frac{1}{|\mathcal{C}|} \sum_{t \in \mathcal{C}}
+  \Big(1 - \cos\big(\tilde{\mathbf{x}}^{\text{band}}_t, \boldsymbol{\mu}_p(\lfloor d_t / 5 \rfloor)\big)\Big),
+\end{equation}
+where $\mathcal{C}$ are the current-season observations up to $\tau$. The gate is
+\begin{equation}
+  g = \sigma\big(\mathbf{w}_g^{\top}[\mathbf{h}_{\text{temp}} ; \mathbf{e}_p ; \mathbb{1}_{|\mathcal{C}|>0}] + b_g
+      - \lambda\, D_{\text{rot}}\big), \qquad \lambda = \mathrm{softplus}(\lambda_0) > 0,
+\end{equation}
+with $\mathbf{e}_p$ a learned embedding of the previous crop and $g = 0$ when the previous crop is unknown.
+The fused representation is
+\begin{equation}
+  \mathbf{h} = \mathbf{h}_{\text{FiLM}} + g\, \mathbf{e}_p ,
+\end{equation}
+and an MLP head outputs class probabilities $\mathbf{p} = \mathrm{softmax}(f(\mathbf{h}))$.
+
+\subsection{Class-balanced focal loss}
+With $n_c$ training fields in class $c$, the effective-number weight is
+$\alpha_c \propto (1 - \beta_{cb}) / (1 - \beta_{cb}^{\,n_c})$, normalised to sum to $C$, and
+\begin{equation}
+  \mathcal{L} = - \alpha_{y}\,(1 - p_{y})^{\kappa} \log p_{y},
+\end{equation}
+with $\beta_{cb} = 0.999$ and $\kappa = 1$. (A stronger setting, $\beta_{cb} = 0.9999$ and $\kappa = 2$, weighted the
+rarest class about 240 times the most common one and led one training run to ignore the satellite series and
+repeat the previous-year crop; the milder setting avoids this.)
+
+\subsection{Training protocol}
+All runs follow the training setup of the baseline's official implementation, so that run A is a faithful
+reproduction and runs B--D are compared with it under identical conditions. Models are trained on the 2022
+fields (stratified 90/10 train/validation split) with a cutoff day drawn uniformly from the year for each sample,
+so a single model serves every date; for a cutoff $\tau$ the input holds the observations of the 365 days before
+$\tau$. Optimisation uses Adam (learning rate $10^{-3}$, weight decay $5\times10^{-8}$, batch size 512, constant
+learning rate) for at most 120 epochs, with early stopping (patience 10) on the mean macro-F1 over the four
+benchmark dates on the 2022 validation split. The 2023 fields are used only for testing, never for model
+selection. Each configuration is trained with three random seeds and we report the mean and standard deviation.
+
+\subsection{Ablation design}
+Run A is the baseline of Gen\'e-Mola et al.\ (2026), re-implemented from its official code: a single Transformer
+encoder (linear $12\to64$, ReLU, five post-norm encoder layers with two heads and feed-forward width 128,
+dropout 0.018, max-pooling, ReLU, linear classifier) without positional encoding, in which each ancillary value
+(previous-year crop, irrigation system, municipality, elevation, slope; scaled to $[-1,1]$) is appended as one
+additional time step. The only remaining difference is that the 365-day window is given as the list of observed
+dates with a padding mask rather than as a zero-filled daily grid. Run B replaces this model with the dual-branch
+model with cross-attention and FiLM (previous crop always added, $g = 1$). Run C adds the rotation-aware gate,
+and run D adds the class-balanced focal loss. From B to D each run differs from the previous one in exactly one
+component.

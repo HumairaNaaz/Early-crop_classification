@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+cache/
+runs/
+smoke/
+*.npz
+*.pt
+*.csv.gz
+
+# local run (run_local.py / START_HERE.bat)
+.venv/
+raw/
+logs/
+runs_v2/
+handover_deepasha/
+*.zip
+*.bat

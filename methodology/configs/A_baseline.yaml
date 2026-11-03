@@ -1,0 +1,5 @@
+# Run A: baseline reproduction (single Transformer, ancillary data appended to every time step).
+base: base.yaml
+name: A_baseline
+model:
+  type: baseline

@@ -1,0 +1,7 @@
+# Run A (v2): faithful CatCrops baseline (models/catcrops_baseline.py).
+base: base.yaml
+name: A_baseline
+model:
+  type: catcrops_baseline
+  dropout: 0.017998950510888446   # official TransformerModel default
+  positional_encoding: false      # official: time enters only through the day-of-year channel
