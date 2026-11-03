@@ -1,0 +1,5 @@
+# Run C: B + Rotation-Aware Adaptive Gate.
+base: base.yaml
+name: C_gate
+model:
+  gate: rotation

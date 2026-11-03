@@ -1,0 +1,6 @@
+# Run B: A + dual-branch with FiLM / cross-attention fusion. Previous crop always added (no gate).
+base: base.yaml
+name: B_fusion
+model:
+  type: dual_branch
+  gate: fixed

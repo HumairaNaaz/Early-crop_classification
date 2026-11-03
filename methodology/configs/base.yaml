@@ -1,0 +1,40 @@
+# Shared settings for every run. Run configs override only what they change.
+name: base
+train_year: 2022
+test_year: 2023
+val_fraction: 0.10
+split_seed: 42            # same stratified 90/10 split as the dataset stage
+
+data:
+  aggregation: mean       # extra fix 3: set to cloud_weighted
+  multi_year: true        # keep previous-year observations (baseline's sparse multi-year input)
+  prior_dropout: 0.0      # extra fix 2: e.g. 0.3 hides the previous crop for 30% of training fields
+  min_cutoff_doy: 1       # training draws a random cutoff day in [min, max]
+  max_cutoff_doy: 365
+
+model:
+  type: dual_branch       # baseline | dual_branch
+  d_model: 64
+  n_heads: 2
+  n_layers: 5             # 5 self-attention blocks
+  d_ff: 128
+  dropout: 0.1
+  positional_encoding: true
+  use_cross_attention: true
+  fusion: film            # film | concat
+  gate: rotation          # none | fixed | rotation
+  static_emb_dim: 16
+
+loss:
+  type: ce                # ce | cb_focal
+  cb_beta: 0.9999
+  focal_gamma: 2.0
+
+train:
+  epochs: 30
+  batch_size: 256
+  lr: 0.001
+  weight_decay: 0.0001
+  patience: 6             # early stopping on mean validation macro-F1 over the 4 dates
+  num_workers: 2
+  eval_cutoffs: [60, 152, 244, 335]   # 1 Mar, 1 Jun, 1 Sep, 1 Dec

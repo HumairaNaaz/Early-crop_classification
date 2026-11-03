@@ -1,0 +1,5 @@
+# Extra (switchable fix 3): full model + cloud-weighted merging of overlapping tiles.
+base: D_full.yaml
+name: D_full_cloud_weighted
+data:
+  aggregation: cloud_weighted

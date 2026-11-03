@@ -1,0 +1,17 @@
+# v2 protocol (2 Nov 2026): every run follows the training setup of the official CatCrops code
+# (github.com/UEA-Irta/CatCrops, processing/train.py) so that run A is a faithful baseline and
+# B-D are compared with it under identical conditions.
+base: ../base.yaml
+name: base_v2
+
+data:
+  window_days: 365        # only the 365 days before the cutoff (official apply_datecrop)
+
+train:
+  epochs: 120             # official maximum
+  batch_size: 512         # official
+  lr: 0.001               # official
+  weight_decay: 5.0e-8    # official
+  optimizer: adam         # official (torch.optim.Adam)
+  lr_schedule: none       # official: constant learning rate
+  patience: 10            # early stopping on mean 2022-validation macro-F1 over the 4 dates

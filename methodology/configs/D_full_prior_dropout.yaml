@@ -1,0 +1,5 @@
+# Extra (switchable fix 2): full model + prior-crop dropout.
+base: D_full.yaml
+name: D_full_prior_dropout
+data:
+  prior_dropout: 0.3
