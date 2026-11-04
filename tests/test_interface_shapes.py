@@ -14,18 +14,91 @@ def _try(fn):
 
 
 def test_temporal_branch_shape():
-    from src.models.dual_branch_fusion import TemporalBranch
-    m = _try(lambda: TemporalBranch())
-    out = m(torch.randn(B, T, 12), torch.ones(B, T, dtype=torch.bool))
-    assert out.shape == (B, D)
+    import torch
+    from models.branches import TemporalBranch
 
+    batch_size = 4
+    seq_len = 20
+    in_channels = 12
+    d_model = 64
+
+    model = TemporalBranch(
+        in_channels=in_channels,
+        d_model=d_model,
+        n_heads=2,
+        n_layers=2,
+        d_ff=128,
+        dropout=0.0,
+        positional_encoding=True,
+    )
+
+    x = torch.randn(batch_size, seq_len, in_channels)
+
+    days = torch.randint(
+        -366, 366, (batch_size, seq_len)
+    )
+
+    mask = torch.ones(
+        batch_size, seq_len, dtype=torch.bool
+    )
+
+    output = model(x, days, mask)
+
+    assert output.shape == (batch_size, seq_len, d_model)
+    assert torch.isfinite(output).all()
 
 def test_film_fusion_shape():
-    from src.models.dual_branch_fusion import FiLMFusion
-    m = _try(lambda: FiLMFusion())
-    assert m(torch.randn(B, D), torch.randn(B, D)).shape == (B, D)
+    import torch
+    from models.film_fusion import FiLM
 
+    batch_size = 4
+    d_model = 64
 
+    fusion = FiLM(d_model=d_model)
+
+    h_temp = torch.randn(batch_size, d_model)
+    h_static = torch.randn(batch_size, d_model)
+
+    output = fusion(h_temp, h_static)
+
+    # Output shape
+    assert output.shape == (batch_size, d_model)
+
+    # Output must contain finite values
+    assert torch.isfinite(output).all()
+
+    # FiLM initially behaves like the identity function
+    assert torch.allclose(output, h_temp, atol=1e-6)
+
+def test_film_fusion_backpropagation():
+    import torch
+    from models.film_fusion import FiLM
+
+    torch.manual_seed(42)
+
+    fusion = FiLM(d_model=64)
+
+    h_temp = torch.randn(4, 64, requires_grad=True)
+    h_static = torch.randn(4, 64, requires_grad=True)
+
+    output = fusion(h_temp, h_static)
+
+    loss = output.square().mean()
+    loss.backward()
+
+    # Input gradients
+    assert h_temp.grad is not None
+    assert h_static.grad is not None
+
+    # Learnable parameter gradients
+    assert fusion.to_gamma.weight.grad is not None
+    assert fusion.to_beta.weight.grad is not None
+
+    # All gradients should be finite
+    assert torch.isfinite(h_temp.grad).all()
+    assert torch.isfinite(h_static.grad).all()
+    assert torch.isfinite(fusion.to_gamma.weight.grad).all()
+    assert torch.isfinite(fusion.to_beta.weight.grad).all()
 
 import torch
 from models.rotation_gate import RotationGate
@@ -466,3 +539,70 @@ def test_class_balanced_focal_loss_rejects_invalid_gamma():
                 beta=0.999,
                 gamma=gamma,
             )
+
+def test_temporal_branch_ignores_padding():
+    import torch
+    from models.branches import TemporalBranch
+
+    torch.manual_seed(42)
+
+    model = TemporalBranch(
+        in_channels=12,
+        d_model=64,
+        n_heads=2,
+        n_layers=2,
+        d_ff=128,
+        dropout=0.0,
+    ).eval()
+
+    x = torch.randn(2, 10, 12)
+    days = torch.randint(-366, 366, (2, 10))
+
+    mask = torch.tensor([
+        [True, True, True, True, True, False, False, False, False, False],
+        [True, True, True, True, True, True, True, False, False, False],
+    ])
+
+    x_modified = x.clone()
+    x_modified[~mask] = torch.randn_like(x_modified[~mask]) * 100
+
+    days_modified = days.clone()
+    days_modified[~mask] = 999
+
+    with torch.no_grad():
+        output_original = model(x, days, mask)
+        output_modified = model(x_modified, days_modified, mask)
+
+    assert torch.allclose(
+        output_original[mask],
+        output_modified[mask],
+        atol=1e-5,
+    )
+
+def test_temporal_branch_uses_day_information():
+    import torch
+    from models.branches import TemporalBranch
+
+    torch.manual_seed(42)
+
+    model = TemporalBranch(
+        in_channels=12,
+        d_model=64,
+        n_heads=2,
+        n_layers=2,
+        d_ff=128,
+        dropout=0.0,
+        positional_encoding=True,
+    ).eval()
+
+    x = torch.randn(2, 10, 12)
+    mask = torch.ones(2, 10, dtype=torch.bool)
+
+    days_early = torch.zeros(2, 10, dtype=torch.long)
+    days_late = torch.full((2, 10), 100, dtype=torch.long)
+
+    with torch.no_grad():
+        output_early = model(x, days_early, mask)
+        output_late = model(x, days_late, mask)
+
+    assert not torch.allclose(output_early, output_late)
