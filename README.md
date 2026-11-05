@@ -1,8 +1,6 @@
 # Enhanced Early Crop Type Classification via Dual-Branch Cross-Attention and Rotation-Aware Adaptive Gating
 
-A minor research project focused on classifying crop types from Sentinel-2 time-series data earlier in the growing season than the 2026 baseline (Gené-Mola et al., *Computers and Electronics in Agriculture*, 253, 112138, DOI: 10.1016/j.compag.2026.112138).
-
-> **Project status:** All proposed components are hypotheses under investigation. No performance improvement is claimed until supported by verified experimental results.
+A research project focused on classifying crop types from CatCrops data earlier in the growing season keeping the 2026  (Gené-Mola et al., *Computers and Electronics in Agriculture*, 253, 112138, DOI: 10.1016/j.compag.2026.112138) as the baseline.
 
 ---
 
