@@ -22,3 +22,12 @@ loss:
   focal_gamma: 2.0   # TODO(Deepasha): placeholder, tune
 gate:
   lambda: 1.0        # divergence sensitivity (placeholder)
+
+train:
+  epochs: 30
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  patience: 6
+  num_workers: 0
+  eval_cutoffs: [60, 152, 244, 335]
