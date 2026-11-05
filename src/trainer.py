@@ -225,7 +225,7 @@ def train_one_epoch(model, loader, optimizer, criterion, device):
         "accuracy": accuracy
     }
 
-def validate_one_epoch(model, loader, criterion, device):
+def validate_one_epoch(model, loader, criterion, device, n_classes: int = 18):
     """Evaluate the model on a validation dataset."""
     model.eval()
 
@@ -271,7 +271,7 @@ def validate_one_epoch(model, loader, criterion, device):
         y_pred=all_predictions,
         y_prev=all_previous_crops,
         rotation_mask=all_rotation_flags,
-        n_classes=18
+        n_classes=n_classes
     )
 
     return {
