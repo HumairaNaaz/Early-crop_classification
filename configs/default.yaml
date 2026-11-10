@@ -31,3 +31,7 @@ train:
   patience: 6
   num_workers: 0
   eval_cutoffs: [60, 152, 244, 335]
+  scheduler: plateau   # plateau (ReduceLROnPlateau on val macro-F1) | none
+
+logging:
+  backend: none        # none | tensorboard | wandb (history.json is always written)

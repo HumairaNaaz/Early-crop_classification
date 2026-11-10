@@ -1,160 +1,188 @@
 """OWNER: Eval Lead (Divyanshi). Accuracy, macro/weighted F1, per-class F1 (+support), confusion
 matrix, rotated-field accuracy, rare-class (<0.2% frequency) F1.
 
-Design notes
-------------
-* Inputs may be Python lists, NumPy arrays or torch tensors (``validate_one_epoch`` passes lists).
-* Everything returned is a plain Python type (float / int / list / None), so the result can be
-  written straight to JSON with ``json.dump`` and no custom encoder.
-* ``macro_f1`` averages over classes that actually occur in ``y_true`` (support > 0). A class that
-  is absent from the ground truth therefore cannot drag the score down just because the model
-  never had a chance to predict it. ``weighted_f1`` weights each class by its support.
-* Rare classes are those whose frequency is below ``rare_threshold`` (default 0.002 = 0.2 %).
-  Frequency is measured on ``y_true`` unless ``class_frequencies`` is supplied.
-* Rotation: a field is "rotated" when ``rotation_mask`` is True (the dataset's ``rotation_flag``).
-  ``y_prev`` holds *raw* previous-year crop codes, while ``y_true`` holds *mapped* class ids
-  (0..n_classes-1), so the two live in different code spaces and a rotation mask is NOT derived
-  from them here. ``y_prev`` is only length-checked.
+Pure numpy on purpose: the trainer, CI (which only installs torch/numpy/pyyaml/pytest) and the
+experiment scripts can all import it without scikit-learn.
+
+Conventions (all agreed with the team's data stage, see configs/evaluation_subsets.json):
+  * labels are the MAPPED class ids 0..n_classes-1 (configs/class_mapping.json), not raw ids;
+  * a field is "rotated" when its previous-year crop class is known and differs from the
+    current class (same definition as methodology/data/cache.py rotation_group == "changed");
+  * rare classes are those whose training-set frequency is below 0.2 % (threshold 0.002).
 """
 from __future__ import annotations
 
-from typing import Optional, Sequence
+import json
+from pathlib import Path
 
 import numpy as np
-from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 
-RARE_CLASS_THRESHOLD = 0.002  # 0.2 % of the evaluated fields
-
-
-def _to_numpy(values, name: str) -> np.ndarray:
-    """Convert a list / ndarray / torch tensor to a 1-D NumPy array."""
-    if hasattr(values, "detach"):  # torch.Tensor, without importing torch here
-        values = values.detach().cpu().numpy()
-    array = np.asarray(values)
-    if array.ndim != 1:
-        raise ValueError(f"{name} must be one-dimensional, got shape {array.shape}.")
-    return array
+RARE_THRESHOLD = 0.002
+_CONFIG_DIR = Path(__file__).resolve().parents[1] / "configs"
 
 
-def _safe_float(value) -> float:
-    return float(value)
+def load_rare_class_ids(config_dir: str | Path | None = None) -> list[int]:
+    """Rare class ids in the MAPPED label space (0..17).
+
+    configs/evaluation_subsets.json lists raw ids (4, 5, 6, 16, 20); class_mapping.json
+    maps them to 0..17 (16 -> 14, 20 -> 17), which is what the models predict."""
+    d = Path(config_dir) if config_dir else _CONFIG_DIR
+    raw = json.loads((d / "evaluation_subsets.json").read_text())["rare_class_ids"]
+    mapping = json.loads((d / "class_mapping.json").read_text())
+    return sorted(int(mapping[str(r)]) for r in raw)
 
 
-def compute_metrics(
-    y_true,
-    y_pred,
-    y_prev=None,
-    n_classes: int = 18,
-    rotation_mask=None,
-    rare_threshold: float = RARE_CLASS_THRESHOLD,
-    class_frequencies: Optional[Sequence[float]] = None,
-) -> dict:
-    """Compute the evaluation metrics for one evaluation date.
+def rare_classes_from_counts(class_counts, threshold: float = RARE_THRESHOLD) -> list[int]:
+    """Classes whose share of the (training) fields is below `threshold`."""
+    counts = np.asarray(class_counts, dtype=np.float64)
+    total = counts.sum()
+    if total <= 0:
+        return []
+    return [int(c) for c in np.flatnonzero((counts / total) < threshold)]
 
-    Parameters
-    ----------
-    y_true, y_pred : 1-D integer class ids in ``[0, n_classes)``.
-    y_prev : optional previous-year crop codes; only its length is checked (see module notes).
-    n_classes : number of classes (18 for CatCrops).
-    rotation_mask : optional 1-D boolean flags, True for rotated fields.
-    rare_threshold : frequency below which a class counts as rare.
-    class_frequencies : optional per-class frequencies (length ``n_classes``) to decide which
-        classes are rare, e.g. computed on the training set. Defaults to frequencies in ``y_true``.
 
-    Returns
-    -------
-    dict with keys: ``n_samples``, ``accuracy``, ``macro_f1``, ``weighted_f1``,
-    ``per_class_f1`` (list, n_classes), ``per_class_support`` (list, n_classes),
-    ``confusion_matrix`` (n_classes x n_classes list, rows = true, columns = predicted),
-    ``rotated_accuracy``, ``rotated_support``, ``non_rotated_accuracy``, ``rare_f1``,
-    ``rare_classes``. ``rotated_accuracy`` / ``non_rotated_accuracy`` / ``rare_f1`` are None when
-    there is nothing to average over.
-    """
-    if n_classes <= 0:
-        raise ValueError("n_classes must be positive.")
+def rotation_mask_from_prev(y_true, y_prev) -> np.ndarray:
+    """True where the previous crop is known (>= 0) and differs from the current one."""
+    y_true = np.asarray(y_true)
+    y_prev = np.asarray(y_prev)
+    return (y_prev >= 0) & (y_prev != y_true)
 
-    y_true = _to_numpy(y_true, "y_true")
-    y_pred = _to_numpy(y_pred, "y_pred")
 
-    if len(y_true) == 0:
-        raise ValueError("y_true is empty; cannot compute metrics.")
-    if len(y_true) != len(y_pred):
-        raise ValueError(
-            f"y_true and y_pred must have the same length ({len(y_true)} != {len(y_pred)})."
-        )
-    if not (np.issubdtype(y_true.dtype, np.integer) and np.issubdtype(y_pred.dtype, np.integer)):
-        raise ValueError("y_true and y_pred must contain integer class ids.")
+def confusion_matrix(y_true, y_pred, n_classes: int) -> np.ndarray:
+    """(n_classes, n_classes) counts; rows = true class, columns = predicted class."""
+    y_true = np.asarray(y_true, dtype=np.int64)
+    y_pred = np.asarray(y_pred, dtype=np.int64)
+    if y_true.shape != y_pred.shape:
+        raise ValueError("y_true and y_pred must have the same length")
+    if y_true.size and (y_true.min() < 0 or y_true.max() >= n_classes
+                        or y_pred.min() < 0 or y_pred.max() >= n_classes):
+        raise ValueError(f"labels must lie in 0..{n_classes - 1}")
+    cm = np.zeros((n_classes, n_classes), dtype=np.int64)
+    np.add.at(cm, (y_true, y_pred), 1)
+    return cm
 
-    for name, arr in (("y_true", y_true), ("y_pred", y_pred)):
-        if arr.min() < 0 or arr.max() >= n_classes:
-            raise ValueError(f"{name} contains class ids outside [0, {n_classes - 1}].")
 
-    if y_prev is not None:
-        y_prev = _to_numpy(y_prev, "y_prev")
-        if len(y_prev) != len(y_true):
-            raise ValueError("y_prev must have the same length as y_true.")
+def _per_class_prf(cm: np.ndarray):
+    tp = np.diag(cm).astype(np.float64)
+    support = cm.sum(axis=1).astype(np.float64)
+    predicted = cm.sum(axis=0).astype(np.float64)
+    precision = np.divide(tp, predicted, out=np.zeros_like(tp), where=predicted > 0)
+    recall = np.divide(tp, support, out=np.zeros_like(tp), where=support > 0)
+    denom = precision + recall
+    f1 = np.divide(2 * precision * recall, denom, out=np.zeros_like(tp), where=denom > 0)
+    return precision, recall, f1, support, predicted
 
-    n_samples = int(len(y_true))
-    labels = np.arange(n_classes)
 
-    # Per-class precision / recall / F1 / support, with every class present in the output.
-    _, _, f1, support = precision_recall_fscore_support(
-        y_true, y_pred, labels=labels, zero_division=0
-    )
-    support = support.astype(int)
+def _summary(y_true, y_pred, n_classes: int) -> dict:
+    """accuracy / macro-F1 / weighted-F1 for one set of fields.
 
-    correct = y_true == y_pred
-    accuracy = correct.mean()
-
-    present = support > 0
-    macro_f1 = f1[present].mean()  # present is never all-False because y_true is non-empty
-    weighted_f1 = float(np.sum(f1 * support) / support.sum())
-
-    cm = confusion_matrix(y_true, y_pred, labels=labels)
-
-    # --- Rotated fields -------------------------------------------------------------------
-    rotated_accuracy = None
-    non_rotated_accuracy = None
-    rotated_support = 0
-    if rotation_mask is not None:
-        rotation_mask = _to_numpy(rotation_mask, "rotation_mask")
-        if len(rotation_mask) != n_samples:
-            raise ValueError("rotation_mask must have the same length as y_true.")
-        if rotation_mask.dtype != bool:
-            if not np.isin(rotation_mask, (0, 1)).all():
-                raise ValueError("rotation_mask must contain only boolean / 0-1 values.")
-            rotation_mask = rotation_mask.astype(bool)
-
-        rotated_support = int(rotation_mask.sum())
-        if rotated_support > 0:
-            rotated_accuracy = _safe_float(correct[rotation_mask].mean())
-        if rotated_support < n_samples:
-            non_rotated_accuracy = _safe_float(correct[~rotation_mask].mean())
-
-    # --- Rare classes -------------------------------------------------------------------
-    if class_frequencies is None:
-        frequencies = support / n_samples
-    else:
-        frequencies = np.asarray(class_frequencies, dtype=float)
-        if frequencies.shape != (n_classes,):
-            raise ValueError(f"class_frequencies must have length {n_classes}.")
-
-    # A class must occur in y_true (support > 0) for its F1 to be meaningful.
-    rare_mask = (frequencies < rare_threshold) & present
-    rare_classes = [int(c) for c in labels[rare_mask]]
-    rare_f1 = _safe_float(f1[rare_mask].mean()) if rare_mask.any() else None
-
+    Macro-F1 averages over the classes present in y_true OR y_pred. This is sklearn's default
+    and exactly what methodology/engine.py reports, so numbers from both code paths agree and
+    subsets (e.g. rotated fields) are not penalised for classes that never occur in them."""
+    n = int(len(y_true))
+    if n == 0:
+        return {"n": 0, "accuracy": None, "macro_f1": None, "weighted_f1": None}
+    cm = confusion_matrix(y_true, y_pred, n_classes)
+    _, _, f1, support, predicted = _per_class_prf(cm)
+    present = (support > 0) | (predicted > 0)
     return {
-        "n_samples": n_samples,
-        "accuracy": _safe_float(accuracy),
-        "macro_f1": _safe_float(macro_f1),
-        "weighted_f1": _safe_float(weighted_f1),
-        "per_class_f1": [float(v) for v in f1],
-        "per_class_support": [int(v) for v in support],
-        "confusion_matrix": cm.tolist(),
-        "rotated_accuracy": rotated_accuracy,
-        "rotated_support": rotated_support,
-        "non_rotated_accuracy": non_rotated_accuracy,
-        "rare_f1": rare_f1,
-        "rare_classes": rare_classes,
+        "n": n,
+        "accuracy": float(np.trace(cm) / n),
+        "macro_f1": float(f1[present].mean()),
+        "weighted_f1": float((f1 * support).sum() / support.sum()),
     }
+
+
+def compute_metrics(y_true, y_pred, y_prev=None, rotation_mask=None, n_classes: int = 18,
+                    rare_class_ids=None, class_counts=None,
+                    rare_threshold: float = RARE_THRESHOLD) -> dict:
+    """All evaluation metrics for one set of predictions.
+
+    y_true, y_pred : (N,) class ids 0..n_classes-1 (lists, numpy arrays or torch tensors)
+    y_prev         : (N,) previous-year class id, -1 = unknown. Only used to derive
+                     rotation_mask when that is not given.
+    rotation_mask  : (N,) bool, True = crop changed since last year. Wins over y_prev.
+    rare_class_ids : explicit rare classes (mapped ids). Otherwise derived from class_counts
+                     (share < rare_threshold); otherwise the team's list from
+                     configs/evaluation_subsets.json when n_classes == 18, else none.
+
+    Returns a JSON-serialisable dict with keys: n, accuracy, macro_f1, weighted_f1,
+    per_class_f1 / per_class_precision / per_class_recall / per_class_support (lists of
+    length n_classes), confusion_matrix (n_classes x n_classes nested list, rows = true),
+    rotated_n, rotated_accuracy, rotated_macro_f1, nonrotated_n, nonrotated_accuracy,
+    rare_class_ids, rare_class_f1, rare_class_support.
+
+    Edge cases: an empty input gives zeros/None instead of raising; a subset with no fields
+    (no rotated fields, no rare-class fields) gives None for its metrics, never NaN; a class
+    absent from y_true and y_pred gets F1 0 and support 0 in the per-class lists but is
+    left out of the macro averages."""
+    y_true = _as_int_array(y_true, "y_true")
+    y_pred = _as_int_array(y_pred, "y_pred")
+    if y_true.shape != y_pred.shape:
+        raise ValueError("y_true and y_pred must have the same length")
+    if y_prev is not None:
+        y_prev = _as_int_array(y_prev, "y_prev")
+        if y_prev.shape != y_true.shape:
+            raise ValueError("y_prev must have the same length as y_true")
+
+    if rotation_mask is None and y_prev is not None:
+        rotation_mask = rotation_mask_from_prev(y_true, y_prev)
+    rot = None if rotation_mask is None else _as_bool_array(rotation_mask)
+    if rot is not None and rot.shape != y_true.shape:
+        raise ValueError("rotation_mask must have the same length as y_true")
+
+    cm = confusion_matrix(y_true, y_pred, n_classes)
+    precision, recall, f1, support, _ = _per_class_prf(cm)
+    out = {**_summary(y_true, y_pred, n_classes),
+           "per_class_f1": f1.tolist(), "per_class_precision": precision.tolist(),
+           "per_class_recall": recall.tolist(), "per_class_support": support.astype(int).tolist(),
+           "confusion_matrix": cm.tolist()}
+
+    if rot is None:
+        out.update(rotated_n=None, rotated_accuracy=None, rotated_macro_f1=None,
+                   nonrotated_n=None, nonrotated_accuracy=None)
+    else:
+        r = _summary(y_true[rot], y_pred[rot], n_classes)
+        nr = _summary(y_true[~rot], y_pred[~rot], n_classes)
+        out.update(rotated_n=r["n"], rotated_accuracy=r["accuracy"], rotated_macro_f1=r["macro_f1"],
+                   nonrotated_n=nr["n"], nonrotated_accuracy=nr["accuracy"])
+
+    if rare_class_ids is None:
+        if class_counts is not None:
+            rare_class_ids = rare_classes_from_counts(class_counts, rare_threshold)
+        elif n_classes == 18:
+            rare_class_ids = load_rare_class_ids()
+        else:
+            rare_class_ids = []
+    rare = sorted({int(c) for c in rare_class_ids if 0 <= int(c) < n_classes})
+    rare_present = [c for c in rare if support[c] > 0]
+    out["rare_class_ids"] = rare
+    out["rare_class_f1"] = float(f1[rare_present].mean()) if rare_present else None
+    out["rare_class_support"] = int(support[rare].sum()) if rare else 0
+    return out
+
+
+def _as_int_array(x, name: str = "labels") -> np.ndarray:
+    """1-D int64 array from a list / numpy array / torch tensor. Rejects non-integer values
+    (e.g. 0.5) instead of silently truncating them."""
+    if hasattr(x, "detach"):
+        x = x.detach().cpu().numpy()
+    arr = np.asarray(x).reshape(-1)
+    if arr.size and arr.dtype.kind == "f":
+        if not np.all(np.isfinite(arr)) or not np.all(arr == np.round(arr)):
+            raise ValueError(f"{name} must be integer class ids")
+    elif arr.size and arr.dtype.kind not in "iub":
+        raise ValueError(f"{name} must be integer class ids")
+    return arr.astype(np.int64)
+
+
+def _as_bool_array(x, name: str = "rotation_mask") -> np.ndarray:
+    """1-D bool array from bools or 0/1 values; anything else is an error."""
+    if hasattr(x, "detach"):
+        x = x.detach().cpu().numpy()
+    arr = np.asarray(x).reshape(-1)
+    if arr.dtype.kind == "b":
+        return arr
+    if arr.size and (arr.dtype.kind not in "iuf" or not np.all(np.isin(arr, (0, 1)))):
+        raise ValueError(f"{name} must contain booleans (or 0/1)")
+    return arr.astype(bool)

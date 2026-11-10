@@ -7,5 +7,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.10" }
-      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install pytest numpy pyyaml
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install pytest numpy pandas scikit-learn matplotlib pyyaml
       - run: pytest -q
