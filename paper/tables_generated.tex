@@ -1,0 +1,62 @@
+\begin{table}[t]
+\caption{Macro-F1 over the five rare classes (frequency below 0.2\% of the 2022 training fields) on the 2023 test year; runs as in Table~II.}
+\label{tab:rare}
+\centering
+\begin{tabular}{lcccc}
+\hline
+Run & 1 Mar & 1 Jun & 1 Sep & 1 Dec \\
+\hline
+A & 0.008$\pm$0.003 & 0.034$\pm$0.006 & \textbf{0.137$\pm$0.009} & \textbf{0.185$\pm$0.016} \\
+B & 0.027$\pm$0.008 & 0.052$\pm$0.009 & 0.091$\pm$0.012 & 0.100$\pm$0.010 \\
+C & 0.018$\pm$0.001 & 0.051$\pm$0.013 & 0.092$\pm$0.011 & 0.106$\pm$0.013 \\
+D & \textbf{0.044$\pm$0.005} & \textbf{0.083$\pm$0.006} & 0.135$\pm$0.019 & 0.143$\pm$0.022 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Weighted-F1 on the 2023 test year (classes weighted by their number of test fields); runs as in Table~II.}
+\label{tab:weighted}
+\centering
+\begin{tabular}{lcccc}
+\hline
+Run & 1 Mar & 1 Jun & 1 Sep & 1 Dec \\
+\hline
+A & 0.796$\pm$0.012 & \textbf{0.837$\pm$0.010} & \textbf{0.874$\pm$0.008} & \textbf{0.882$\pm$0.005} \\
+B & 0.798$\pm$0.003 & 0.829$\pm$0.012 & 0.848$\pm$0.014 & 0.848$\pm$0.014 \\
+C & 0.783$\pm$0.022 & 0.823$\pm$0.014 & 0.843$\pm$0.014 & 0.846$\pm$0.011 \\
+D & \textbf{0.801$\pm$0.003} & 0.836$\pm$0.007 & 0.856$\pm$0.009 & 0.858$\pm$0.010 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Per-class F1 on the 2023 test year at 1 Dec for the baseline (A) and the full model (D), mean $\pm$ standard deviation over three seeds. Rare classes (frequency below 0.2\% of the 2022 training fields) are marked with an asterisk; $n$ is the number of test fields.}
+\label{tab:per_class}
+\centering
+\footnotesize
+\begin{tabular}{lrcc}
+\hline
+Class & $n$ & A & D \\
+\hline
+0 & 5449 & 0.780$\pm$0.029 & 0.730$\pm$0.042 \\
+1 & 34875 & 0.893$\pm$0.010 & 0.847$\pm$0.028 \\
+2 & 655 & 0.647$\pm$0.151 & 0.658$\pm$0.041 \\
+3 & 10126 & 0.899$\pm$0.008 & 0.885$\pm$0.006 \\
+4* & 587 & 0.219$\pm$0.035 & 0.190$\pm$0.106 \\
+5* & 463 & 0.102$\pm$0.072 & 0.081$\pm$0.031 \\
+6* & 116 & 0.159$\pm$0.095 & 0.056$\pm$0.029 \\
+7 & 1004 & 0.468$\pm$0.070 & 0.568$\pm$0.088 \\
+8 & 8082 & 0.643$\pm$0.015 & 0.547$\pm$0.046 \\
+9 & 51562 & 0.975$\pm$0.001 & 0.970$\pm$0.002 \\
+10 & 11989 & 0.971$\pm$0.001 & 0.967$\pm$0.003 \\
+11 & 2202 & 0.939$\pm$0.002 & 0.955$\pm$0.003 \\
+12 & 4292 & 0.784$\pm$0.020 & 0.785$\pm$0.005 \\
+13 & 796 & 0.249$\pm$0.053 & 0.192$\pm$0.046 \\
+14* & 709 & 0.248$\pm$0.027 & 0.252$\pm$0.036 \\
+15 & 290 & 0.575$\pm$0.021 & 0.420$\pm$0.036 \\
+16 & 3530 & 0.622$\pm$0.042 & 0.567$\pm$0.022 \\
+17* & 328 & 0.196$\pm$0.046 & 0.136$\pm$0.017 \\
+\hline
+\end{tabular}
+\end{table}

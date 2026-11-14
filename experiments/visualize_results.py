@@ -106,7 +106,7 @@ def plot_f1_vs_doy(summary: pd.DataFrame, out: Path) -> Path:
         ax.set_xticks(cutoffs)
         ax.set_xticklabels([ticks.get(int(c), str(c)) for c in cutoffs])
         ax.set_xlim(cutoffs[0] - 12, cutoffs[-1] + 40)
-        ax.set_xlabel("Cutoff date (observations before this day)")
+        ax.set_xlabel("Cutoff date")
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="outside upper right", ncol=len(cfgs), fontsize=7.5)
     path = out / "f1_vs_doy.pdf"
@@ -187,7 +187,8 @@ def plot_gate_values(runs_dir: Path, year: int, configs: list[str], out: Path) -
         ax.set_ylim(-0.02, 1.02)
         ax.set_title(f"{LABELS.get(cfg, cfg)}: gate value")
     axes[0][0].set_ylabel("Gate value g")
-    axes[0][-1].legend(loc="lower right", fontsize=7)
+    handles, labels = axes[0][-1].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="outside lower center", ncol=2, fontsize=7, frameon=False)
     path = out / "gate_values.pdf"
     _save(fig, path)
     plt.close(fig)
@@ -218,7 +219,7 @@ def plot_per_class_f1(per_class: pd.DataFrame, config: str, date: str, out: Path
     for yi, sup in enumerate(support):
         ax.text(1.02, yi, f"n={sup}", va="center", fontsize=6, color=INK2)
     ax.legend(handles=[Patch(color=GROUP_COLORS["same"], label="other classes"),
-                       Patch(color=GROUP_COLORS["changed"], label="rare classes (<0.2%)")],
+                       Patch(color=GROUP_COLORS["changed"], label="rare (<0.2% of 2022 train)")],
               loc="lower left", ncol=2, fontsize=6)
     ax.set_title(f"Per-class F1: {LABELS.get(config, config)}, {DATE_LABELS.get(date, date)}")
     path = out / f"per_class_f1_{config}_{date}.pdf"
@@ -244,7 +245,7 @@ def plot_ablation(summary: pd.DataFrame, out: Path) -> Path | None:
                error_kw={"ecolor": INK2, "elinewidth": 0.8, "capsize": 2})
     ax.set_xticks(x)
     ax.set_xticklabels([DATE_LABELS.get(d, d) for d in dates])
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 0.8)
     ax.set_xlabel("Evaluation date (observations up to this day)")
     ax.set_ylabel("Macro-F1 (mean \u00b1 std over seeds)")
     ax.legend(loc="upper left", ncol=2, fontsize=6)
