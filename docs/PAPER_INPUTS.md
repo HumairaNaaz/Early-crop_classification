@@ -1,2 +1,6 @@
 # Paper inputs (teammates append verified facts here; Humaira copies into LaTeX)
 Format: `- [owner, date, commit] fact`
+- [Divyanshi, 2026-11-14, 9c289b2] 2023 test rotation groups (from prediction files): same crop 100,908; changed crop 34,074; unknown previous crop 2,073 (total 137,055).
+- [Divyanshi, 2026-11-14, 9c289b2] Rare-class F1 (macro-F1 over the 5 classes below 0.2% of 2022 training fields; 2,203 test fields), mean +/- std over 3 seeds, at 1 Mar / 1 Jun / 1 Sep / 1 Dec: A 0.008+/-0.003, 0.034+/-0.006, 0.137+/-0.009, 0.185+/-0.016; B 0.027+/-0.008, 0.052+/-0.009, 0.091+/-0.012, 0.100+/-0.010; C 0.018+/-0.001, 0.051+/-0.013, 0.092+/-0.011, 0.106+/-0.013; D 0.044+/-0.005, 0.083+/-0.006, 0.135+/-0.019, 0.143+/-0.022.
+- [Divyanshi, 2026-11-14, 9c289b2] Weighted-F1, same layout: A 0.796+/-0.012, 0.837+/-0.010, 0.874+/-0.008, 0.882+/-0.005; B 0.798+/-0.003, 0.829+/-0.012, 0.848+/-0.014, 0.848+/-0.014; C 0.783+/-0.022, 0.823+/-0.014, 0.843+/-0.014, 0.846+/-0.011; D 0.801+/-0.003, 0.836+/-0.007, 0.856+/-0.009, 0.858+/-0.010.
+- [Divyanshi, 2026-11-14, 9c289b2] Metrics cross-check: over all 12 runs, src/metrics.py agrees with methodology/predict.py metrics to 2.22e-16. Source files: paper/results/*.csv; generated LaTeX tables: paper/tables_generated.tex.

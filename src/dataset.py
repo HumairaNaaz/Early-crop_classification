@@ -17,7 +17,7 @@ class CatCropsDataset(Dataset):
         self.root = Path(dataset_root)
         self.max_steps = max_steps
 
-        config_dir = Path(__file__).resolve().parents[1] / "config"
+        config_dir = Path(__file__).resolve().parents[1] / "configs"
         with open(config_dir / "class_mapping.json", encoding="utf-8") as f:
             self.class_mapping = json.load(f)
         with open(config_dir / "categorical_mappings.json", encoding="utf-8") as f:
